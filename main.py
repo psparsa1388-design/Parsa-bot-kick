@@ -1,18 +1,17 @@
-from telegram.ext import Updater, MessageHandler, Filters
-import os
 
-TOKEN = os.getenv("BOT_TOKEN")
-GROUP_ID = int(os.getenv("GROUP_ID"))
+from telegram import Update
+from telegram.ext import ApplicationBuilder, ChatMemberHandler, ContextTypes
 
-def kick_user(update, context):
-    if update.message.chat.id == GROUP_ID:
-        user_id = update.message.from_user.id
-        context.bot.kick_chat_member(GROUP_ID, user_id)
-        context.bot.unban_chat_member(GROUP_ID, user_id)
+TOKEN = "8099175254:AAGy9fULXMLNAz-eaMovLwv6Vmv8n2Tatq0"  # توکن رباتت
+GROUP_ID = -1002383622279  # آیدی گروهت
 
-updater = Updater(token=TOKEN, use_context=True)
-dispatcher = updater.dispatcher
-dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, kick_user))
+async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    member_status = update.chat_member
+    if member_status.new_chat_member.status == "member":
+        await context.bot.ban_chat_member(chat_id=GROUP_ID, user_id=member_status.new_chat_member.user.id, until_date=0)
+        await context.bot.unban_chat_member(chat_id=GROUP_ID, user_id=member_status.new_chat_member.user.id)
 
-updater.start_polling()
-updater.idle()
+if __name__ == '__main__':
+    app = ApplicationBuilder().token(TOKEN).build()
+    app.add_handler(ChatMemberHandler(kick_user, ChatMemberHandler.CHAT_MEMBER))
+    app.run_polling()
